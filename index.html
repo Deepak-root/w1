@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Wethr — A modern, fast, responsive weather app with live search, 7-day forecast, and dynamic condition themes.">
+  <title>Wethr — Live Weather &amp; Forecast</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='4'/><path d='M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41'/></svg>">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body data-theme="clear" data-time="day">
+  <div class="app-background-overlay"></div>
+
+  <div class="app-container">
+    <!-- Main Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1 class="brand-title">Wethr</h1>
+          <p class="brand-subtitle">Real-time weather &amp; 7-day forecast</p>
+        </div>
+      </div>
+
+      <!-- Temperature Unit Toggle -->
+      <div class="unit-toggle-wrapper">
+        <button id="unit-toggle" class="unit-toggle" type="button" aria-label="Toggle temperature unit between Celsius and Fahrenheit">
+          <span class="unit-option active" id="unit-c">°C</span>
+          <span class="unit-divider">/</span>
+          <span class="unit-option" id="unit-f">°F</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Search & Location Controls -->
+    <section class="controls-section" aria-label="Location search and geolocation">
+      <form id="search-form" class="search-form" role="search">
+        <div class="search-input-wrapper">
+          <svg class="input-icon search-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.3-4.3"/>
+          </svg>
+          <input
+            type="search"
+            id="search-input"
+            class="search-input"
+            placeholder="Search city (e.g. Delhi, London, Tokyo)..."
+            autocomplete="off"
+            spellcheck="false"
+            required
+            aria-label="City name"
+          >
+          <button type="submit" id="search-button" class="btn btn-search" aria-label="Search city">
+            Search
+          </button>
+        </div>
+
+        <button type="button" id="geo-button" class="btn btn-geo" aria-label="Use my current location">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 2v3m0 14v3M2 12h3m14 0h3"/>
+          </svg>
+          <span class="btn-text">Use my location</span>
+        </button>
+      </form>
+
+      <!-- Search Results Dropdown List -->
+      <div id="search-results-container" class="search-results-container hidden" aria-live="polite">
+        <div class="results-header">
+          <span class="results-title">Select Location</span>
+          <button type="button" id="close-results" class="close-results" aria-label="Close search results">&times;</button>
+        </div>
+        <ul id="search-results-list" class="search-results-list" role="listbox"></ul>
+      </div>
+    </section>
+
+    <!-- Status Messages (Loading / Error / Empty) -->
+    <section class="status-section" aria-live="polite">
+      <!-- Loading State -->
+      <div id="loading-state" class="status-card loading-card hidden">
+        <div class="spinner" aria-hidden="true"></div>
+        <p id="loading-text" class="status-text">Fetching weather data...</p>
+      </div>
+
+      <!-- Error State -->
+      <div id="error-state" class="status-card error-card hidden" role="alert">
+        <div class="status-icon-wrapper error-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </div>
+        <div class="status-content">
+          <h2 class="status-heading">Something went wrong</h2>
+          <p id="error-message" class="status-text">Unable to load data. Please try again.</p>
+        </div>
+        <button type="button" id="dismiss-error" class="dismiss-btn" aria-label="Dismiss error message">Dismiss</button>
+      </div>
+
+      <!-- Empty State / Welcome Screen -->
+      <div id="empty-state" class="status-card empty-card">
+        <div class="empty-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v2M12 20v2m-7.07-14.93 1.41 1.41m9.9 9.9 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m9.9-9.9 1.41-1.41"/>
+            <circle cx="12" cy="12" r="5"/>
+          </svg>
+        </div>
+        <h2 class="empty-title">Welcome to Wethr</h2>
+        <p class="empty-desc">Search for any city above or click <strong>Use my location</strong> to get real-time weather and a 7-day forecast.</p>
+      </div>
+    </section>
+
+    <!-- Main Weather Content -->
+    <main id="weather-content" class="weather-content hidden">
+      <!-- Current Conditions Card -->
+      <article class="card current-card" aria-labelledby="current-city-name">
+        <div class="current-header">
+          <div class="location-info">
+            <h2 id="current-city-name" class="city-name">--</h2>
+            <p id="current-location-sub" class="location-sub">--</p>
+          </div>
+          <div id="current-time-badge" class="time-badge">Now</div>
+        </div>
+
+        <div class="current-main">
+          <div class="temp-condition">
+            <div id="current-icon" class="current-icon" aria-hidden="true"></div>
+            <div class="temp-wrap">
+              <span id="current-temp" class="current-temp">--°</span>
+              <span id="current-condition-label" class="condition-label">--</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Weather Metrics Grid -->
+        <div class="metrics-grid">
+          <div class="metric-item">
+            <div class="metric-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
+              </svg>
+            </div>
+            <div class="metric-details">
+              <span class="metric-label">Feels Like</span>
+              <span id="current-feels" class="metric-value">--°</span>
+            </div>
+          </div>
+
+          <div class="metric-item">
+            <div class="metric-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+              </svg>
+            </div>
+            <div class="metric-details">
+              <span class="metric-label">Humidity</span>
+              <span id="current-humidity" class="metric-value">--%</span>
+            </div>
+          </div>
+
+          <div class="metric-item">
+            <div class="metric-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"/>
+                <path d="M9.6 4.6A2 2 0 1 1 11 8H2"/>
+                <path d="M12.6 19.4A2 2 0 1 0 14 16H2"/>
+              </svg>
+            </div>
+            <div class="metric-details">
+              <span class="metric-label">Wind Speed</span>
+              <span id="current-wind" class="metric-value">-- km/h</span>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- 7-Day Forecast Section -->
+      <section class="forecast-section" aria-labelledby="forecast-heading">
+        <div class="forecast-header">
+          <h3 id="forecast-heading" class="forecast-title">7-Day Forecast</h3>
+          <span class="forecast-sub">Daily High / Low</span>
+        </div>
+        <div class="forecast-cards-wrapper">
+          <div id="forecast-cards" class="forecast-cards" role="region" aria-label="7-day daily forecast cards">
+            <!-- Forecast cards dynamically rendered here -->
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>Data provided by <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo API</a> (no key required).</p>
+      <p class="footer-note">Built with plain HTML, CSS, and Vanilla JavaScript for GitHub Pages.</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
